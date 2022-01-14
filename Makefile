@@ -197,7 +197,7 @@ endif
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c $$(c_dep)
 	@$(CPP) $(CPPFLAGS) $< -o $(C_BUILDDIR)/$*.i
-	@$(PREPROC) $(C_BUILDDIR)/$*.i charmap.txt | $(CC1) $(CFLAGS) -o $(C_BUILDDIR)/$*.s
+	@$(PREPROC) $(C_BUILDDIR)/$*.i "" | $(CC1) $(CFLAGS) -o $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
 
 ifeq ($(SCAN_DEPS),1)
@@ -226,7 +226,7 @@ data/payload.gba.lz: payload/payload.gba
 	$(GFX) $< $@ -search 1
 
 $(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s $$(data_dep)
-	$(PREPROC) $< charmap.txt | $(CPP) -I include - | $(AS) $(ASFLAGS) -o $@
+	$(PREPROC) $< "" | $(CPP) -I include - | $(AS) $(ASFLAGS) -o $@
 
 $(ELF): ld_script.txt $(OBJS)
 	cd $(OBJ_DIR) && $(LD) $(LDFLAGS) -T ../ld_script.txt -o ../$@

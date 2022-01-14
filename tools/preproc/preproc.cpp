@@ -76,13 +76,6 @@ void PreprocAsmFile(std::string filename)
             PrintAsmBytes(s, length);
             break;
         }
-        case Directive::Braille:
-        {
-            unsigned char s[kMaxStringLength];
-            int length = stack.top().ReadBraille(s);
-            PrintAsmBytes(s, length);
-            break;
-        }
         case Directive::Unknown:
         {
             std::string globalLabel = stack.top().GetGlobalLabel();

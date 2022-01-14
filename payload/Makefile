@@ -153,7 +153,7 @@ endif
 
 $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c $$(c_dep)
 	@$(CPP) $(CPPFLAGS) $< -o $(C_BUILDDIR)/$*.i
-	@$(PREPROC) $(C_BUILDDIR)/$*.i charmap.txt | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
+	@$(PREPROC) $(C_BUILDDIR)/$*.i "" | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
 	@echo -e ".text\n\t.align\t2, 0\n" >> $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
 
@@ -173,7 +173,7 @@ $(DATA_ASM_BUILDDIR)/%.o: data_dep = $(shell $(SCANINC) $(DATA_ASM_SUBDIR)/$*.s)
 endif
 
 $(DATA_ASM_BUILDDIR)/%.o: $(DATA_ASM_SUBDIR)/%.s $$(data_dep)
-	$(PREPROC) $< charmap.txt | $(CPP) -I include | $(AS) $(ASFLAGS) -o $@
+	$(PREPROC) $< "" | $(CPP) -I include | $(AS) $(ASFLAGS) -o $@
 
 $(OBJ_DIR)/sym_bss.ld: sym_bss.txt
 	$(RAMSCRGEN) .bss $< ENGLISH > $@

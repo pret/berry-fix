@@ -55,9 +55,9 @@ public:
 
 private:
     char* m_buffer;
-    long m_pos;
-    long m_size;
-    long m_lineNum;
+    long m_pos = 0;
+    long m_size = 0;
+    long m_lineNum = 1;
     std::string m_filename;
 
     void RemoveComments();
@@ -67,6 +67,12 @@ private:
 
 CharmapReader::CharmapReader(std::string filename) : m_filename(filename)
 {
+    if (filename.empty()) {
+        m_buffer = new char[1];
+        m_buffer[0] = 0;
+        return;
+    }
+
     FILE *fp = std::fopen(filename.c_str(), "rb");
 
     if (fp == NULL)
