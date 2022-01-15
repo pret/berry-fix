@@ -4,6 +4,7 @@
 #include "rtc.h"
 #include "berry_fix_save.h"
 #include "event_data.h"
+#include "message_box.h"
 
 static s32 gInitialWaitTimer;
 IntrFunc gIntrTable[16];
@@ -70,7 +71,7 @@ void AgbMain(void)
         REG_IE |= INTR_FLAG_GAMEPAK;
     REG_DISPSTAT = DISPSTAT_VBLANK_INTR;
     REG_IME = INTR_FLAG_VBLANK;
-    msg_load_gfx();
+    MessageBox_Load();
     gMainCallbackState = MAINCB_INIT;
     gUnknown_3001194 = 0;
     for (;;)
@@ -173,7 +174,7 @@ void main_callback(u32 * state, void * unused1, void * unused2)
     switch (*state)
     {
         case MAINCB_INIT:
-            msg_display(MSGBOX_WILL_NOW_UPDATE);
+            MessageBox_Display(MSG_WILL_NOW_UPDATE);
             if (++gInitialWaitTimer >= 180)
             {
                 gInitialWaitTimer = 0;
@@ -240,7 +241,7 @@ void main_callback(u32 * state, void * unused1, void * unused2)
                 *state = MAINCB_FIX_PACIFIDLOG_TM;
             break;
         case MAINCB_FIX_PACIFIDLOG_TM:
-            msg_display(MSGBOX_UPDATING);
+            MessageBox_Display(MSG_UPDATING);
             if (BerryFix_ResetPacifidlogTM() == TRUE)
             {
                 gUpdateSuccessful |= 1;
@@ -253,16 +254,16 @@ void main_callback(u32 * state, void * unused1, void * unused2)
             if (gUpdateSuccessful == 0)
                 *state = MAINCB_NO_NEED_TO_FIX;
             else
-                msg_display(MSGBOX_HAS_BEEN_UPDATED);
+                MessageBox_Display(MSG_HAS_BEEN_UPDATED);
             break;
         case MAINCB_NO_NEED_TO_FIX:
-            msg_display(MSGBOX_NO_NEED_TO_UPDATE);
+            MessageBox_Display(MSG_NO_NEED_TO_UPDATE);
             break;
         case MAINCB_YEAR_MAKES_NO_SENSE:
-            msg_display(MSGBOX_UNABLE_TO_UPDATE);
+            MessageBox_Display(MSG_UNABLE_TO_UPDATE);
             break;
         case MAINCB_ERROR:
-            msg_display(MSGBOX_UNABLE_TO_UPDATE);
+            MessageBox_Display(MSG_UNABLE_TO_UPDATE);
             break;
     }
 }

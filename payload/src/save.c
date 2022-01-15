@@ -1,6 +1,5 @@
 #include "global.h"
 #include "save.h"
-#include "rtc.h"
 
 /*
     The Berry Fix Program contains a copy of most of Ruby/Sapphire's save code.
@@ -55,50 +54,6 @@ const struct SaveBlockChunk gSaveBlockChunks[] =
     SAVEBLOCK_CHUNK(gPokemonStorage, 7),
     SAVEBLOCK_CHUNK(gPokemonStorage, 8),
 };
-
-const u16 gInfoMessagesPal[] = INCBIN_U16("graphics/msg_box.gbapal");
-const u8 gInfoMessagesTilemap[] = INCBIN_U8("graphics/msg_box.tilemap.lz");
-const u8 gInfoMessagesGfx[] = INCBIN_U8("graphics/msg_box.4bpp.lz");
-
-void msg_load_gfx(void)
-{
-    REG_DISPCNT = 0;
-    REG_BG0HOFS = 0;
-    REG_BG0VOFS = 0;
-    REG_BLDCNT = 0;
-    LZ77UnCompVram(gInfoMessagesGfx, (void *)BG_VRAM);
-    LZ77UnCompVram(gInfoMessagesTilemap, (void *)BG_SCREEN_ADDR(28));
-    CpuCopy16(gInfoMessagesPal, (void *)BG_PLTT, BG_PLTT_SIZE);
-    REG_BG0CNT = BGCNT_SCREENBASE(28) | BGCNT_TXT512x512;
-    REG_DISPCNT = DISPCNT_BG0_ON;
-}
-
-void msg_display(enum MsgBoxUpdateMessage a0)
-{
-    switch (a0)
-    {
-        case MSGBOX_WILL_NOW_UPDATE:
-            REG_BG0HOFS = 0;
-            REG_BG0VOFS = 0;
-            break;
-        case MSGBOX_HAS_BEEN_UPDATED:
-            REG_BG0HOFS = 0x100;
-            REG_BG0VOFS = 0;
-            break;
-        case MSGBOX_UNABLE_TO_UPDATE:
-            REG_BG0HOFS = 0x100;
-            REG_BG0VOFS = 0xB0;
-            break;
-        case MSGBOX_NO_NEED_TO_UPDATE:
-            REG_BG0HOFS = 0;
-            REG_BG0VOFS = 0xB0;
-            break;
-        case MSGBOX_UPDATING:
-            REG_BG0HOFS = 0;
-            REG_BG0VOFS = 0x160;
-            break;
-    }
-}
 
 // Unused
 static void ClearSaveData(void)

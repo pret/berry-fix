@@ -15,14 +15,7 @@
 #define SECTOR_ID_SAVEBLOCK2          0
 #define SECTOR_ID_SAVEBLOCK1_START    1
 #define SECTOR_ID_SAVEBLOCK1_END      4
-#define SECTOR_ID_PKMN_STORAGE_START  5
-#define SECTOR_ID_PKMN_STORAGE_END   13
 #define NUM_SECTORS_PER_SLOT         14
-// Save Slot 1: 0-13;  Save Slot 2: 14-27
-#define SECTOR_ID_HOF_1              28
-#define SECTOR_ID_HOF_2              29
-#define SECTOR_ID_TRAINER_HILL       30
-#define SECTOR_ID_RECORDED_BATTLE    31
 #define SECTORS_COUNT                32
 
 #define SAVE_STATUS_EMPTY    0
@@ -40,15 +33,6 @@ enum
     SECTOR_DAMAGED,
     SECTOR_OK,
     SECTOR_CHECK, // unused
-};
-
-enum MsgBoxUpdateMessage
-{
-    MSGBOX_WILL_NOW_UPDATE = 0,
-    MSGBOX_HAS_BEEN_UPDATED,
-    MSGBOX_UNABLE_TO_UPDATE,
-    MSGBOX_NO_NEED_TO_UPDATE,
-    MSGBOX_UPDATING
 };
 
 struct SaveBlockChunk
@@ -75,10 +59,5 @@ extern const struct SaveBlockChunk gSaveBlockChunks[];
 
 u8 WriteSaveSectorOrSlot(u16 sectorId, const struct SaveBlockChunk *chunks);
 u8 TryLoadSaveSlot(u16 sectorId, const struct SaveBlockChunk *chunks);
-
-void msg_load_gfx(void);
-void msg_display(enum MsgBoxUpdateMessage);
-bool32 flash_maincb_check_need_reset_pacifidlog_tm(void);
-bool32 flash_maincb_reset_pacifidlog_tm(void);
 
 #endif //GUARD_SAVE_H
