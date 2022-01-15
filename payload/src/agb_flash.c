@@ -1,5 +1,4 @@
 #include "gba/gba.h"
-#include "gba/flash_internal.h"
 
 static u8 sTimerNum;
 static u16 sTimerCount;

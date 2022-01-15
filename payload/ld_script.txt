@@ -9,7 +9,10 @@ SECTIONS {
 		asm/crt0.o(.text);
 		src/main.o(.text);
 		src/rtc.o(.text);
-		src/flash.o(.text);
+		src/berry_fix_save.o(.text);
+		src/message_box.o(.text);
+		src/save.o(.text);
+		src/event_data.o(.text);
 	} =0
 
 	lib_text :
@@ -31,7 +34,8 @@ SECTIONS {
 	{
 	    src/main.o(.rodata);
 	    src/rtc.o(.rodata);
-	    src/flash.o(.rodata);
+	    src/save.o(.rodata);
+	    src/message_box.o(.rodata);
 	} =0
 
 	lib_rodata :

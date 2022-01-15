@@ -18,7 +18,7 @@ _start: @ 0
 	b _entry
 	arm_func_end _start
 
-	.include "asm/berry_fix_header.inc"
+	.include "asm/rom_header.inc"
 
 @ C0
 	.word 0
@@ -107,7 +107,7 @@ _1a0:
 	bne _1a0
 	mov r1, #0
 	strh r1, [r0, 0xa] @ SIOMLT_SEND
-	ldr r0, =_data_2f0
+	ldr r0, =gPayload
 	ldr r1, =gCode
 	swi 0x11 << 16
 	ldr lr, =gCode
