@@ -2,7 +2,7 @@
 #include "global.h"
 #include "main.h"
 #include "rtc.h"
-#include "flash.h"
+#include "save.h"
 
 static s32 gInitialWaitTimer;
 IntrFunc gIntrTable[16];

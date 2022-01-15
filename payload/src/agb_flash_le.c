@@ -1,5 +1,4 @@
 #include "gba/gba.h"
-#include "gba/flash_internal.h"
 
 const u16 leMaxTime[] =
 {

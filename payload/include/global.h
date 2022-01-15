@@ -2,6 +2,7 @@
 #define GUARD_GLOBAL_H
 
 #include "gba/gba.h"
+#include "constants/vars.h"
 
 // IDE support
 #if defined(__APPLE__) || defined(__CYGWIN__) || defined(__INTELLISENSE__)
@@ -31,7 +32,6 @@
 #define POKEMON_SLOTS_NUMBER 412
 #define POKEMON_NAME_LENGTH 10
 #define OT_NAME_LENGTH 7
-#define VARS_COUNT  256
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) >= (b) ? (a) : (b))
@@ -59,7 +59,7 @@ struct Time
 };
 
 // Dummy Ruby/Sapphire save structs.
-// Only the vars array in SaveBlock1 is needed for the Berry Fix Program.
+// Only the vars array in SaveBlock1 (for VAR_PACIFIDLOG_TM_RECEIVED_DAY specifically) is needed for the Berry Fix Program.
 
 struct SaveBlock1
 {
