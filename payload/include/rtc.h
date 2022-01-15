@@ -19,7 +19,7 @@ extern struct Time gTimeSinceBerryUpdate;
 extern struct Time gRtcUTCTime;
 
 bool32 BerryFix_TryInitRtc(void);
+void BerryFix_TryFixDate(void);
 bool32 BerryFix_CalcTimeDifference(u8 *);
-void BerryFix_SetDate(void);
 
 #endif //GUARD_RTC_H

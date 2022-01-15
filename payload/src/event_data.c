@@ -27,7 +27,7 @@ static u16 * GetVarPointer(u16 id)
     return NULL;
 }
 
-bool32 BerryFix_ShouldResetPacifidlogTM(void)
+bool32 BerryFix_IsPacifidlogTMCorrect(void)
 {
     u8 year;
     u16 * var = GetVarPointer(VAR_PACIFIDLOG_TM_RECEIVED_DAY);
@@ -41,7 +41,7 @@ bool32 BerryFix_ShouldResetPacifidlogTM(void)
 bool32 BerryFix_ResetPacifidlogTM(void)
 {
     u8 year;
-    if (BerryFix_ShouldResetPacifidlogTM() == TRUE)
+    if (BerryFix_IsPacifidlogTMCorrect() == TRUE)
         return TRUE;
     BerryFix_CalcTimeDifference(&year);
     if (gRtcUTCTime.days < 0)

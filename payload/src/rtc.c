@@ -347,13 +347,15 @@ static bool32 RtcNeedsLeapDayIncrement(struct SiiRtcInfo * rtc)
     if (ConvertBcdToBinary(rtc->year) == 1)
         return TRUE;
 
-    // After 2001 just set clock forward 365 days
+    // After 2001 (shouldn't occur)
     return FALSE;
 }
 
-void BerryFix_SetDate(void)
+void BerryFix_TryFixDate(void)
 {
     RtcGetRawInfo(&sRtcInfoWork);
+
+    // If the year is anything but 2000 or 2001 then the Berry Glitch has already passed
     if (ConvertBcdToBinary(sRtcInfoWork.year) == 0 || ConvertBcdToBinary(sRtcInfoWork.year) == 1)
     {
         if (ConvertBcdToBinary(sRtcInfoWork.year) == 1)
@@ -367,7 +369,7 @@ void BerryFix_SetDate(void)
         }
         else
         {
-            // Berry Glitch hasn't begun yet (or was already passed)
+            // Year is 2000, the Berry Glitch hasn't begun yet
             // Set the date forward 365/366 days to avoid the glitch
             if (RtcNeedsLeapDayIncrement(&sRtcInfoWork) == TRUE)
             {

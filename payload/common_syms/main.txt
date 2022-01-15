@@ -3,7 +3,7 @@ gHeldKeys
 gNewKeys
 gIntrVector
 gUpdateSuccessful
-gUnknown_3001194
-gUnknown_30011A0
+gUnusedVar
+gUnusedBuffer
 gMainCallbackState
 gGameVersion
