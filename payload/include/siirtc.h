@@ -1,5 +1,5 @@
-#ifndef GUARD_RTC_H
-#define GUARD_RTC_H
+#ifndef GUARD_SIIRTC_H
+#define GUARD_SIIRTC_H
 
 #include "gba/gba.h"
 
@@ -51,4 +51,4 @@ bool8 SiiRtcGetTime(struct SiiRtcInfo *rtc);
 bool8 SiiRtcSetTime(struct SiiRtcInfo *rtc);
 bool8 SiiRtcSetAlarm(struct SiiRtcInfo *rtc);
 
-#endif // GUARD_RTC_H
+#endif // GUARD_SIIRTC_H
