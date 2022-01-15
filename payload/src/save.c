@@ -1,5 +1,4 @@
 #include "global.h"
-#include "main.h"
 #include "save.h"
 #include "rtc.h"
 
@@ -8,17 +7,9 @@
     Much of it lies unused.
 */
 
-struct SaveBlockChunk
-{
-    u8 * data;
-    u16 size;
-};
-
-static u8 WriteSaveSectorOrSlot(u16, const struct SaveBlockChunk *);
 static u8 HandleWriteSector(u16, const struct SaveBlockChunk *);
 static u8 TryWriteSector(u8, u8 *);
 static u8 HandleReplaceSector(u16, const struct SaveBlockChunk *);
-static u8 TryLoadSaveSlot(u16, const struct SaveBlockChunk *);
 static u8 CopySaveSlotData(u16, const struct SaveBlockChunk *);
 static u8 GetSaveValidStatus(const struct SaveBlockChunk *);
 static u32 ReadFlashSector(u8, struct SaveSector *);
@@ -45,7 +36,7 @@ EWRAM_DATA struct PokemonStorage gPokemonStorage = {};
     min(sizeof(structure) - chunkNum * SECTOR_DATA_SIZE, SECTOR_DATA_SIZE)  \
 }                                                                           \
 
-static const struct SaveBlockChunk sSaveBlockChunks[] =
+const struct SaveBlockChunk gSaveBlockChunks[] =
 {
     SAVEBLOCK_CHUNK(gSaveBlock2, 0),
 
@@ -68,73 +59,6 @@ static const struct SaveBlockChunk sSaveBlockChunks[] =
 const u16 gInfoMessagesPal[] = INCBIN_U16("graphics/msg_box.gbapal");
 const u8 gInfoMessagesTilemap[] = INCBIN_U8("graphics/msg_box.tilemap.lz");
 const u8 gInfoMessagesGfx[] = INCBIN_U8("graphics/msg_box.4bpp.lz");
-
-bool32 BerryFix_IdentifyFlash(void)
-{
-    gFlashIdentIsValid = TRUE;
-    if (!IdentifyFlash())
-    {
-        SetFlashTimerIntr(0, &((IntrFunc *)gIntrFuncPointers)[9]);
-        return TRUE;
-    }
-    gFlashIdentIsValid = FALSE;
-    return FALSE;
-}
-
-// Unused
-static void BerryFix_ReadFlash(u16 sectorNum, ptrdiff_t offset, void * dest, size_t size)
-{
-    ReadFlash(sectorNum, offset, dest, size);
-}
-
-static u8 BerryFix_WriteSaveSectorOrSlot(u16 sectorId, const struct SaveBlockChunk * chunks)
-{
-    return WriteSaveSectorOrSlot(sectorId, chunks);
-}
-
-static u8 BerryFix_TryLoadSaveSlot(u16 sectorId, const struct SaveBlockChunk * chunks)
-{
-    return TryLoadSaveSlot(sectorId, chunks);
-}
-
-static u32 * BerryFix_GetDamagedSaveSectors(void)
-{
-    return &gDamagedSaveSectors;
-}
-
-static s32 BerryFix_Save(u8 mode)
-{
-    u8 i;
-    switch (mode)
-    {
-    case SAVE_NORMAL:
-    default:
-        BerryFix_WriteSaveSectorOrSlot(FULL_SAVE_SLOT, sSaveBlockChunks);
-        break;
-    case SAVE_SAVEBLOCKS:
-        for (i = SECTOR_ID_SAVEBLOCK2; i <= SECTOR_ID_SAVEBLOCK1_END; i++)
-            BerryFix_WriteSaveSectorOrSlot(i, sSaveBlockChunks);
-        break;
-    case SAVE_SAVEBLOCK2:
-        BerryFix_WriteSaveSectorOrSlot(SECTOR_ID_SAVEBLOCK2, sSaveBlockChunks);
-        break;
-    }
-
-    return 0;
-}
-
-u8 BerryFix_TrySave(u8 mode)
-{
-    BerryFix_Save(mode);
-    if (*BerryFix_GetDamagedSaveSectors() == 0)
-        return SAVE_STATUS_OK;
-    return SAVE_STATUS_ERROR;
-}
-
-u8 BerryFix_LoadSave(u32 unused)
-{
-    return BerryFix_TryLoadSaveSlot(FULL_SAVE_SLOT, sSaveBlockChunks);
-}
 
 void msg_load_gfx(void)
 {
@@ -213,7 +137,7 @@ static bool32 SetDamagedSectorBits(u8 op, u8 sectorId)
     return retVal;
 }
 
-static u8 WriteSaveSectorOrSlot(u16 sectorId, const struct SaveBlockChunk *chunks)
+u8 WriteSaveSectorOrSlot(u16 sectorId, const struct SaveBlockChunk *chunks)
 {
     u32 status;
     u16 i;
@@ -521,7 +445,7 @@ static u8 WriteSectorSecurityByte(u16 sectorId, const struct SaveBlockChunk *chu
     }
 }
 
-static u8 TryLoadSaveSlot(u16 sectorId, const struct SaveBlockChunk *chunks)
+u8 TryLoadSaveSlot(u16 sectorId, const struct SaveBlockChunk *chunks)
 {
     u8 status;
     gReadWriteSector = gSaveDataBuffer;
@@ -784,6 +708,7 @@ bool32 flash_maincb_check_need_reset_pacifidlog_tm(void)
         return FALSE;
 }
 
+extern u8 BerryFix_TrySave(u8 mode);
 bool32 flash_maincb_reset_pacifidlog_tm(void)
 {
     u8 sp0;

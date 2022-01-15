@@ -2,6 +2,7 @@
 #include "global.h"
 #include "main.h"
 #include "rtc.h"
+#include "berry_fix_save.h"
 #include "save.h"
 
 static s32 gInitialWaitTimer;

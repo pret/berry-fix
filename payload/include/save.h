@@ -1,5 +1,5 @@
-#ifndef GUARD_FLASH_H
-#define GUARD_FLASH_H
+#ifndef GUARD_SAVE_H
+#define GUARD_SAVE_H
 
 // Each 4 KiB flash sector contains 3968 bytes of actual data followed by a 128 byte footer.
 // Only 12 bytes of the footer are used.
@@ -58,6 +58,12 @@ enum MsgBoxUpdateMessage
     MSGBOX_UPDATING
 };
 
+struct SaveBlockChunk
+{
+    u8 * data;
+    u16 size;
+};
+
 struct SaveSector
 {
     u8 data[SECTOR_DATA_SIZE];
@@ -70,11 +76,16 @@ struct SaveSector
 
 #define SECTOR_SECURITY_OFFSET offsetof(struct SaveSector, security)
 
-bool32 BerryFix_IdentifyFlash(void);
-bool8 BerryFix_LoadSave(u32);
+extern u32 gDamagedSaveSectors;
+extern bool32 gFlashIdentIsValid;
+extern const struct SaveBlockChunk gSaveBlockChunks[];
+
+u8 WriteSaveSectorOrSlot(u16 sectorId, const struct SaveBlockChunk *chunks);
+u8 TryLoadSaveSlot(u16 sectorId, const struct SaveBlockChunk *chunks);
+
 void msg_load_gfx(void);
 void msg_display(enum MsgBoxUpdateMessage);
 bool32 flash_maincb_check_need_reset_pacifidlog_tm(void);
 bool32 flash_maincb_reset_pacifidlog_tm(void);
 
-#endif //GUARD_FLASH_H
+#endif //GUARD_SAVE_H

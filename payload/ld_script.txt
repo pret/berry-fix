@@ -9,6 +9,7 @@ SECTIONS {
 		asm/crt0.o(.text);
 		src/main.o(.text);
 		src/rtc.o(.text);
+		src/berry_fix_save.o(.text);
 		src/save.o(.text);
 	} =0
 
