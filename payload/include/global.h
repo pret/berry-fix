@@ -26,13 +26,6 @@
 #define RomHeaderMagic           ((const u8 *)  0x080000B2)
 #define RomHeaderSoftwareVersion ((const u8 *)  0x080000BC)
 
-#define LocalTimeOffset     ((struct Time *)0x02028098)
-#define LastBerryTreeUpdate ((struct Time *)0x020280A0)
-
-#define POKEMON_SLOTS_NUMBER 412
-#define POKEMON_NAME_LENGTH 10
-#define OT_NAME_LENGTH 7
-
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) >= (b) ? (a) : (b))
 
@@ -59,19 +52,22 @@ struct Time
 };
 
 // Dummy Ruby/Sapphire save structs.
-// Only the vars array in SaveBlock1 (for VAR_PACIFIDLOG_TM_RECEIVED_DAY specifically) is needed for the Berry Fix Program.
+// Only vars, localTimeOffset, and lastBerryTreeUpdate are needed.
 
 struct SaveBlock1
 {
-    u8 dummy_PreVars[0x1340];
+    u8 dummy_0[0x1340];
     u16 vars[VARS_COUNT];
-    u8 dummy_PostVars[0x2580];
+    u8 dummy_1[0x2580];
 };
 extern struct SaveBlock1 gSaveBlock1;
 
 struct SaveBlock2
 {
-    u8 dummy[0x890];
+    u8 dummy_0[0x98];
+    struct Time localTimeOffset;
+    struct Time lastBerryTreeUpdate;
+    u8 dummy_1[0x7E8];
 };
 extern struct SaveBlock2 gSaveBlock2;
 

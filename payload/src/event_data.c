@@ -31,7 +31,7 @@ bool32 BerryFix_ShouldResetPacifidlogTM(void)
 {
     u8 year;
     u16 * var = GetVarPointer(VAR_PACIFIDLOG_TM_RECEIVED_DAY);
-    rtc_maincb_is_time_since_last_berry_update_positive(&year);
+    BerryFix_CalcTimeDifference(&year);
     if (*var <= gRtcUTCTime.days)
         return TRUE;
     else
@@ -43,7 +43,7 @@ bool32 BerryFix_ResetPacifidlogTM(void)
     u8 year;
     if (BerryFix_ShouldResetPacifidlogTM() == TRUE)
         return TRUE;
-    rtc_maincb_is_time_since_last_berry_update_positive(&year);
+    BerryFix_CalcTimeDifference(&year);
     if (gRtcUTCTime.days < 0)
         return FALSE;
     *GetVarPointer(VAR_PACIFIDLOG_TM_RECEIVED_DAY) = 1;

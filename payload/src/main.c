@@ -196,7 +196,7 @@ void main_callback(u32 * state, void * unused1, void * unused2)
             }
             break;
         case MAINCB_CHECK_RTC:
-            if (!rtc_maincb_is_rtc_working())
+            if (!BerryFix_TryInitRtc())
                 *state = MAINCB_ERROR;
             else
                 ++(*state); // MAINCB_CHECK_FLASH
@@ -214,7 +214,7 @@ void main_callback(u32 * state, void * unused1, void * unused2)
                 *state = MAINCB_ERROR;
             break;
         case MAINCB_CHECK_TIME:
-            if (rtc_maincb_is_time_since_last_berry_update_positive(&year) == TRUE)
+            if (BerryFix_CalcTimeDifference(&year) == TRUE)
             {
                 if (year == 0)
                     ++(*state); // MAINCB_FIX_DATE
@@ -230,7 +230,7 @@ void main_callback(u32 * state, void * unused1, void * unused2)
             }
             break;
         case MAINCB_FIX_DATE:
-            rtc_maincb_fix_date();
+            BerryFix_SetDate();
             gUpdateSuccessful |= 1;
             *state = MAINCB_CHECK_PACIFIDLOG_TM;
             break;

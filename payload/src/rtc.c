@@ -120,7 +120,7 @@ static u16 RtcGetErrorStatus(void)
 // Unused
 static void RtcGetInfo(struct SiiRtcInfo * rtc)
 {
-    if (sErrorStatus & 0xFF0)
+    if (sErrorStatus & RTC_ERR_FLAG_MASK)
         *rtc = sDefaultRTC;
     else
         RtcGetRawInfo(rtc);
@@ -258,15 +258,17 @@ static void CalcTimeDifference(struct Time * result, struct Time * t1, struct Ti
     }
 }
 
-bool32 rtc_maincb_is_rtc_working(void)
+// New code for Berry Fix Program starts here
+
+bool32 BerryFix_TryInitRtc(void)
 {
     RtcInit();
-    if (RtcGetErrorStatus() & 0xFF0)
+    if (RtcGetErrorStatus() & RTC_ERR_FLAG_MASK)
         return FALSE;
     return TRUE;
 }
 
-void rtc_set_datetime(struct SiiRtcInfo * rtc)
+static void RtcSetDateTime(struct SiiRtcInfo * rtc)
 {
     vu16 imeBak = REG_IME;
     REG_IME = 0;
@@ -274,13 +276,19 @@ void rtc_set_datetime(struct SiiRtcInfo * rtc)
     REG_IME = imeBak;
 }
 
-bool32 rtc_maincb_is_time_since_last_berry_update_positive(u8 * year)
+// The below are equivalent to &gSaveBlock2.localTimeOffset and &gSaveBlock2.lastBerryTreeUpdate.
+// Replacing them both below doesn't match
+#define SaveBlock2Addr      (EWRAM_START + 0x28000)
+#define LocalTimeOffset     ((struct Time *)(SaveBlock2Addr + offsetof(struct SaveBlock2, localTimeOffset)))
+#define LastBerryTreeUpdate ((struct Time *)(SaveBlock2Addr + offsetof(struct SaveBlock2, lastBerryTreeUpdate)))
+
+bool32 BerryFix_CalcTimeDifference(u8 * year)
 {
     RtcGetRawInfo(&sRtcInfoWork);
     *year = ConvertBcdToBinary(sRtcInfoWork.year);
     RtcCalcTimeDifference(&sRtcInfoWork, &gRtcUTCTime, LocalTimeOffset);
     CalcTimeDifference(&gTimeSinceBerryUpdate, LastBerryTreeUpdate, &gRtcUTCTime);
-    if (gTimeSinceBerryUpdate.days * 1440 + gTimeSinceBerryUpdate.hours * 60 + gTimeSinceBerryUpdate.minutes >= 0)
+    if (gTimeSinceBerryUpdate.days * 24 * 60 + gTimeSinceBerryUpdate.hours * 60 + gTimeSinceBerryUpdate.minutes >= 0)
         return TRUE;
     return FALSE;
 }
@@ -295,75 +303,82 @@ static u32 ConvertBinaryToBcd(u8 binary)
     return bcd;
 }
 
-void sii_rtc_inc(u8 * a0)
+static void RtcIncrement(u8 * val)
 {
-    *a0 = ConvertBinaryToBcd(ConvertBcdToBinary(*a0) + 1);
+    *val = ConvertBinaryToBcd(ConvertBcdToBinary(*val) + 1);
 }
 
-void sii_rtc_inc_month(struct SiiRtcInfo * a0)
+static void RtcIncrementMonth(struct SiiRtcInfo * rtc)
 {
-    sii_rtc_inc(&a0->month);
-    if (ConvertBcdToBinary(a0->month) > 12)
+    RtcIncrement(&rtc->month);
+    if (ConvertBcdToBinary(rtc->month) > 12)
     {
-        sii_rtc_inc(&a0->year);
-        a0->month = MONTH_JAN;
+        RtcIncrement(&rtc->year);
+        rtc->month = MONTH_JAN;
     }
 }
 
-void sii_rtc_inc_day(struct SiiRtcInfo * a0)
+static void RtcIncrementDay(struct SiiRtcInfo * rtc)
 {
-    sii_rtc_inc(&a0->day);
-    if (ConvertBcdToBinary(a0->day) > sDaysPerMonth[ConvertBcdToBinary(a0->month) - 1])
+    RtcIncrement(&rtc->day);
+    if (ConvertBcdToBinary(rtc->day) > sDaysPerMonth[ConvertBcdToBinary(rtc->month) - 1])
     {
-        if (!IsLeapYear(ConvertBcdToBinary(a0->year)) || ConvertBcdToBinary(a0->month) != MONTH_FEB || ConvertBcdToBinary(a0->day) != 29)
+        if (!IsLeapYear(ConvertBcdToBinary(rtc->year)) || ConvertBcdToBinary(rtc->month) != MONTH_FEB || ConvertBcdToBinary(rtc->day) != 29)
         {
-            a0->day = 1;
-            sii_rtc_inc_month(a0);
+            rtc->day = 1;
+            RtcIncrementMonth(rtc);
         }
     }
 }
 
-bool32 rtc_is_past_feb_28_2000(struct SiiRtcInfo * a0)
+// When fixing the RTC, consider if the leap day on Feb 29, 2000 was reached
+static bool32 RtcNeedsLeapDayIncrement(struct SiiRtcInfo * rtc)
 {
-    if (ConvertBcdToBinary(a0->year) == 0)
+    if (ConvertBcdToBinary(rtc->year) == 0)
     {
-        if (ConvertBcdToBinary(a0->month) == MONTH_JAN)
+        if (ConvertBcdToBinary(rtc->month) == MONTH_JAN)
             return FALSE;
-        if (ConvertBcdToBinary(a0->month) > MONTH_FEB)
+        if (ConvertBcdToBinary(rtc->month) > MONTH_FEB)
             return TRUE;
-        if (ConvertBcdToBinary(a0->day) == 29)
+        if (ConvertBcdToBinary(rtc->day) == 29)
             return TRUE;
         return FALSE;
     }
-    if (ConvertBcdToBinary(a0->year) == 1)
+    if (ConvertBcdToBinary(rtc->year) == 1)
         return TRUE;
+
+    // After 2001 just set clock forward 365 days
     return FALSE;
 }
 
-void rtc_maincb_fix_date(void)
+void BerryFix_SetDate(void)
 {
     RtcGetRawInfo(&sRtcInfoWork);
     if (ConvertBcdToBinary(sRtcInfoWork.year) == 0 || ConvertBcdToBinary(sRtcInfoWork.year) == 1)
     {
         if (ConvertBcdToBinary(sRtcInfoWork.year) == 1)
         {
+            // Year is 2001, the Berry Glitch is occurring
+            // Set date forward to January 2, 2002
             sRtcInfoWork.year = 2;
             sRtcInfoWork.month = MONTH_JAN;
             sRtcInfoWork.day = 2;
-            rtc_set_datetime(&sRtcInfoWork);
+            RtcSetDateTime(&sRtcInfoWork);
         }
         else
         {
-            if (rtc_is_past_feb_28_2000(&sRtcInfoWork) == TRUE)
+            // Berry Glitch hasn't begun yet (or was already passed)
+            // Set the date forward 365/366 days to avoid the glitch
+            if (RtcNeedsLeapDayIncrement(&sRtcInfoWork) == TRUE)
             {
-                sii_rtc_inc_day(&sRtcInfoWork);
-                sii_rtc_inc(&sRtcInfoWork.year);
+                RtcIncrementDay(&sRtcInfoWork);
+                RtcIncrement(&sRtcInfoWork.year);
             }
             else
             {
-                sii_rtc_inc(&sRtcInfoWork.year);
+                RtcIncrement(&sRtcInfoWork.year);
             }
-            rtc_set_datetime(&sRtcInfoWork);
+            RtcSetDateTime(&sRtcInfoWork);
         }
     }
 }
