@@ -42,6 +42,13 @@ enum
     SECTOR_CHECK, // unused
 };
 
+enum
+{
+    SAVE_NORMAL,     // Save full save slot
+    SAVE_SAVEBLOCKS, // Save just SaveBlock1 and SaveBlock2
+    SAVE_SAVEBLOCK2, // Save just SaveBlock2
+};
+
 enum MsgBoxUpdateMessage
 {
     MSGBOX_WILL_NOW_UPDATE = 0,
@@ -62,13 +69,9 @@ struct SaveSector
 }; // size is SECTOR_SIZE (0x1000)
 
 #define SECTOR_SECURITY_OFFSET offsetof(struct SaveSector, security)
-#define SECTOR_COUNTER_OFFSET offsetof(struct SaveSector, counter)
 
-#define eSaveSection ((struct SaveSector *)0x2020000)
-
-
-bool32 flash_maincb_ident_is_valid(void);
-bool8 flash_maincb_read_save(u32);
+bool32 BerryFix_IdentifyFlash(void);
+bool8 BerryFix_LoadSave(u32);
 void msg_load_gfx(void);
 void msg_display(enum MsgBoxUpdateMessage);
 bool32 flash_maincb_check_need_reset_pacifidlog_tm(void);

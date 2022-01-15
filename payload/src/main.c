@@ -200,13 +200,13 @@ void main_callback(u32 * state, void * unused1, void * unused2)
                 ++(*state); // MAINCB_CHECK_FLASH
             break;
         case MAINCB_CHECK_FLASH:
-            if (flash_maincb_ident_is_valid() == TRUE)
+            if (BerryFix_IdentifyFlash() == TRUE)
                 ++(*state); // MAINCB_READ_SAVE
             else
                 *state = MAINCB_ERROR;
             break;
         case MAINCB_READ_SAVE:
-            if (flash_maincb_read_save(0) == SAVE_STATUS_OK)
+            if (BerryFix_LoadSave(0) == SAVE_STATUS_OK)
                 ++(*state); // MAINCB_CHECK_TIME
             else
                 *state = MAINCB_ERROR;
