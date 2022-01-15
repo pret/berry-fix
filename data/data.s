@@ -1,4 +1,4 @@
 	.section .rodata
 
-_data_2f0::
+gPayload::
 	.incbin "data/payload.gba.lz"
