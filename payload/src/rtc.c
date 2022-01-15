@@ -251,10 +251,10 @@ void rtc_set_datetime(struct SiiRtcInfo * info)
     REG_IME = imeBak;
 }
 
-bool32 rtc_maincb_is_time_since_last_berry_update_positive(u8 * a0)
+bool32 rtc_maincb_is_time_since_last_berry_update_positive(u8 * year)
 {
     rtc_get_status_and_datetime(&sRtcInfoWork);
-    *a0 = bcd_to_hex(sRtcInfoWork.year);
+    *year = bcd_to_hex(sRtcInfoWork.year);
     rtc_sub_time_from_datetime(&sRtcInfoWork, &gRtcUTCTime, LocalTimeOffset);
     rtc_sub_time_from_time(&gTimeSinceBerryUpdate, LastBerryTreeUpdate, &gRtcUTCTime);
     if (gTimeSinceBerryUpdate.days * 1440 + gTimeSinceBerryUpdate.hours * 60 + gTimeSinceBerryUpdate.minutes >= 0)

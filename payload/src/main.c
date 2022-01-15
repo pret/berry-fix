@@ -3,7 +3,7 @@
 #include "main.h"
 #include "rtc.h"
 #include "berry_fix_save.h"
-#include "save.h"
+#include "event_data.h"
 
 static s32 gInitialWaitTimer;
 IntrFunc gIntrTable[16];
@@ -234,14 +234,14 @@ void main_callback(u32 * state, void * unused1, void * unused2)
             *state = MAINCB_CHECK_PACIFIDLOG_TM;
             break;
         case MAINCB_CHECK_PACIFIDLOG_TM:
-            if (flash_maincb_check_need_reset_pacifidlog_tm() == TRUE)
+            if (BerryFix_ShouldResetPacifidlogTM() == TRUE)
                 *state = MAINCB_FINISHED;
             else
                 *state = MAINCB_FIX_PACIFIDLOG_TM;
             break;
         case MAINCB_FIX_PACIFIDLOG_TM:
             msg_display(MSGBOX_UPDATING);
-            if (flash_maincb_reset_pacifidlog_tm() == TRUE)
+            if (BerryFix_ResetPacifidlogTM() == TRUE)
             {
                 gUpdateSuccessful |= 1;
                 *state = MAINCB_FINISHED;

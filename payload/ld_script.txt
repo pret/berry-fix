@@ -11,6 +11,7 @@ SECTIONS {
 		src/rtc.o(.text);
 		src/berry_fix_save.o(.text);
 		src/save.o(.text);
+		src/event_data.o(.text);
 	} =0
 
 	lib_text :

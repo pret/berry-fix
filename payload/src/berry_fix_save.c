@@ -1,6 +1,6 @@
 #include "global.h"
 #include "main.h"
-#include "save.h"
+#include "berry_fix_save.h"
 
 bool32 BerryFix_IdentifyFlash(void)
 {

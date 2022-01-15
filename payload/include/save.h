@@ -42,13 +42,6 @@ enum
     SECTOR_CHECK, // unused
 };
 
-enum
-{
-    SAVE_NORMAL,     // Save full save slot
-    SAVE_SAVEBLOCKS, // Save just SaveBlock1 and SaveBlock2
-    SAVE_SAVEBLOCK2, // Save just SaveBlock2
-};
-
 enum MsgBoxUpdateMessage
 {
     MSGBOX_WILL_NOW_UPDATE = 0,
