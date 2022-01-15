@@ -46,6 +46,19 @@
 #define CMD_TIME     CMD(3)
 #define CMD_ALARM    CMD(4)
 
+#define SCK_HI      1
+#define SIO_HI      2
+#define CS_HI       4
+
+#define DIR_0_IN    0
+#define DIR_0_OUT   1
+#define DIR_1_IN    0
+#define DIR_1_OUT   2
+#define DIR_2_IN    0
+#define DIR_2_OUT   4
+#define DIR_ALL_IN  (DIR_0_IN | DIR_1_IN | DIR_2_IN)
+#define DIR_ALL_OUT (DIR_0_OUT | DIR_1_OUT | DIR_2_OUT)
+
 #define GPIO_PORT_DATA        (*(vu16 *)0x80000C4)
 #define GPIO_PORT_DIRECTION   (*(vu16 *)0x80000C6)
 #define GPIO_PORT_READ_ENABLE (*(vu16 *)0x80000C8)
@@ -58,24 +71,25 @@ static bool8 sLocked;
 static int WriteCommand(u8 value);
 static int WriteData(u8 value);
 static u8 ReadData();
+
 static void EnableGpioPortRead();
 static void DisableGpioPortRead();
 
 static const char AgbLibRtcVersion[] = "SIIRTC_V001";
 
-void SiiRtcUnprotect()
+void SiiRtcUnprotect(void)
 {
     EnableGpioPortRead();
     sLocked = FALSE;
 }
 
-void SiiRtcProtect()
+void SiiRtcProtect(void)
 {
     DisableGpioPortRead();
     sLocked = TRUE;
 }
 
-u8 SiiRtcProbe()
+u8 SiiRtcProbe(void)
 {
     u8 errorCode;
     struct SiiRtcInfo rtc;
@@ -116,9 +130,9 @@ u8 SiiRtcProbe()
     return (errorCode << 4) | 1;
 }
 
-bool8 SiiRtcReset()
+bool8 SiiRtcReset(void)
 {
-    u8 result;
+    bool8 result;
     struct SiiRtcInfo rtc;
 
     if (sLocked == TRUE)
@@ -126,15 +140,15 @@ bool8 SiiRtcReset()
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_RESET | WR);
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -154,14 +168,14 @@ bool8 SiiRtcGetStatus(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_STATUS | RD);
 
-    GPIO_PORT_DIRECTION = 5;
+    GPIO_PORT_DIRECTION = DIR_0_OUT | DIR_1_IN | DIR_2_OUT;
 
     statusData = ReadData();
 
@@ -170,8 +184,8 @@ bool8 SiiRtcGetStatus(struct SiiRtcInfo *rtc)
                 | ((statusData & STATUS_INTME) >> 2)
                 | ((statusData & STATUS_INTFE) >> 1);
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -187,22 +201,22 @@ bool8 SiiRtcSetStatus(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
     statusData = STATUS_24HOUR
                | ((rtc->status & SIIRTCINFO_INTAE) << 3)
                | ((rtc->status & SIIRTCINFO_INTME) << 2)
                | ((rtc->status & SIIRTCINFO_INTFE) << 1);
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_STATUS | WR);
 
     WriteData(statusData);
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -218,22 +232,22 @@ bool8 SiiRtcGetDateTime(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_DATETIME | RD);
 
-    GPIO_PORT_DIRECTION = 5;
+    GPIO_PORT_DIRECTION = DIR_0_OUT | DIR_1_IN | DIR_2_OUT;
 
     for (i = 0; i < DATETIME_BUF_LEN; i++)
         DATETIME_BUF(rtc, i) = ReadData();
 
     INFO_BUF(rtc, OFFSET_HOUR) &= 0x7F;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -249,18 +263,18 @@ bool8 SiiRtcSetDateTime(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_DATETIME | WR);
 
     for (i = 0; i < DATETIME_BUF_LEN; i++)
         WriteData(DATETIME_BUF(rtc, i));
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -276,22 +290,22 @@ bool8 SiiRtcGetTime(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_TIME | RD);
 
-    GPIO_PORT_DIRECTION = 5;
+    GPIO_PORT_DIRECTION = DIR_0_OUT | DIR_1_IN | DIR_2_OUT;
 
     for (i = 0; i < TIME_BUF_LEN; i++)
         TIME_BUF(rtc, i) = ReadData();
 
     INFO_BUF(rtc, OFFSET_HOUR) &= 0x7F;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -307,18 +321,18 @@ bool8 SiiRtcSetTime(struct SiiRtcInfo *rtc)
 
     sLocked = TRUE;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIO_PORT_DIRECTION = 7;
+    GPIO_PORT_DIRECTION = DIR_ALL_OUT;
 
     WriteCommand(CMD_TIME | WR);
 
     for (i = 0; i < TIME_BUF_LEN; i++)
         WriteData(TIME_BUF(rtc, i));
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -347,18 +361,18 @@ bool8 SiiRtcSetAlarm(struct SiiRtcInfo *rtc)
 
     alarmData[1] = rtc->alarmMinute;
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 5;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-    GPIOPortDirection = 7; // Why is this the only instance that uses a symbol?
+    GPIOPortDirection = DIR_ALL_OUT; // Why is this the only instance that uses a symbol?
 
     WriteCommand(CMD_ALARM | WR);
 
     for (i = 0; i < 2; i++)
         WriteData(alarmData[i]);
 
-    GPIO_PORT_DATA = 1;
-    GPIO_PORT_DATA = 1;
+    GPIO_PORT_DATA = SCK_HI;
+    GPIO_PORT_DATA = SCK_HI;
 
     sLocked = FALSE;
 
@@ -373,13 +387,17 @@ static int WriteCommand(u8 value)
     for (i = 0; i < 8; i++)
     {
         temp = ((value >> (7 - i)) & 1);
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 5;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | SCK_HI | CS_HI;
     }
 
-    // control reaches end of non-void function
+    // Nothing uses the returned value from this function,
+    // so the undefined behavior is harmless in the vanilla game.
+#ifdef UBFIX
+    return 0;
+#endif
 }
 
 static int WriteData(u8 value)
@@ -390,13 +408,17 @@ static int WriteData(u8 value)
     for (i = 0; i < 8; i++)
     {
         temp = ((value >> i) & 1);
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 4;
-        GPIO_PORT_DATA = (temp << 1) | 5;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | CS_HI;
+        GPIO_PORT_DATA = (temp << 1) | SCK_HI | CS_HI;
     }
 
-    // control reaches end of non-void function
+    // Nothing uses the returned value from this function,
+    // so the undefined behavior is harmless in the vanilla game.
+#ifdef UBFIX
+    return 0;
+#endif
 }
 
 static u8 ReadData()
@@ -405,17 +427,21 @@ static u8 ReadData()
     u8 temp;
     u8 value;
 
+#ifdef UBFIX
+    value = 0;
+#endif
+
     for (i = 0; i < 8; i++)
     {
-        GPIO_PORT_DATA = 4;
-        GPIO_PORT_DATA = 4;
-        GPIO_PORT_DATA = 4;
-        GPIO_PORT_DATA = 4;
-        GPIO_PORT_DATA = 4;
-        GPIO_PORT_DATA = 5;
+        GPIO_PORT_DATA = CS_HI;
+        GPIO_PORT_DATA = CS_HI;
+        GPIO_PORT_DATA = CS_HI;
+        GPIO_PORT_DATA = CS_HI;
+        GPIO_PORT_DATA = CS_HI;
+        GPIO_PORT_DATA = SCK_HI | CS_HI;
 
-        temp = ((GPIO_PORT_DATA & 2) >> 1);
-        value = (value >> 1) | (temp << 7); // UB: accessing uninitialized var
+        temp = ((GPIO_PORT_DATA & SIO_HI) >> 1);
+        value = (value >> 1) | (temp << 7);
     }
 
     return value;
@@ -423,10 +449,10 @@ static u8 ReadData()
 
 static void EnableGpioPortRead()
 {
-    GPIO_PORT_READ_ENABLE = 1;
+    GPIO_PORT_READ_ENABLE = TRUE;
 }
 
 static void DisableGpioPortRead()
 {
-    GPIO_PORT_READ_ENABLE = 0;
+    GPIO_PORT_READ_ENABLE = FALSE;
 }
